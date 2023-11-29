@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문화정책 소개 앱</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 5px;
+            height: 55px;
+            line-height: 55px;
+            /* 텍스트를 수직으로 가운데 정렬 */
+        }
+
+        h3 {
+            margin: 0;
+            /* 텍스트 주위의 여백을 제거 */
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            /* 메인을 플렉스로 설정 */
+            /* 세로 중앙 정렬 */
+            flex-direction: column;
+
+        }
+
+        section {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-right: 20px;
+            /* 메인 오른쪽 여백 추가 */
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label,
+        input,
+        select {
+            margin-bottom: 10px;
+            /* 각 입력 요소 사이에 간격 추가 */
+        }
+
+        .modal-btn {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .centered-btn {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            /* 다른 요소 위에 나타나도록 설정 */
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 30px;
+            line-height: 30px;
+            /* 텍스트를 수직으로 가운데 정렬 */
+        }
+
+        footer nav {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        footer nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        footer nav ul li {
+            text-align: center;
+        }
+
+        footer nav ul li a {
+            text-decoration: none;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        footer nav ul li a:hover {
+            background-color: #555;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .cell {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h3>문화정책 소개 앱</h3>
+    </header>
+
+    <main id="mainContent">
+        <section id="tablesContainer"></section>
+        <div class="centered-btn" id="btnContainer">
+            <button onclick="openQuestionModal()">내용 확인하기</button>
+        </div>
+    </main>
+
+    <footer>
+        <nav>
+            <ul>
+                <li><a href="#">홈</a></li>
+                <li><a href="#">정책</a></li>
+                <li><a href="#">이벤트</a></li>
+                <li><a href="#">설정</a></li>
+            </ul>
+        </nav>
+    </footer>
+
+    <!-- 모달 -->
+    <div id="myModal" class="modal">
+        <div class="modal-content" id="question-section">
+            <!-- 질문과 선택지를 동적으로 생성합니다. -->
+            <label for="age">나이:</label>
+            <input type="text" id="age" name="age" required><br><br>
+            <label for="residence">거주지:</label>
+            <select id="residence" name="residence" required>
+                <option value="" disabled selected>시군을 선택하세요</option>
+                <option value="a">경기도</option>
+                <option value="b">강원도</option>
+                <option value="c">충청도</option>
+                <option value="d">경상도</option>
+                <option value="e">전라도</option>
+                <option value="f">제주도</option>
+                <!-- 여기에 다른 시군 추가 -->
+            </select><br><br>
+            <label for="occupation">직업:</label>
+            <select id="occupation" name="occupation" required>
+                <option value="student">대학생</option>
+                <option value="employee">직장인</option>
+                <option value="unemployed">무직</option>
+            </select><br><br>
+        </div>
+        <button class="modal-btn" id="confirmButton" onclick="processUserInfo()">다음</button>
+    </div>
+
+    <script>
+        // 모달 열기
+        function openQuestionModal() {
+            var btnContainer = document.getElementById('btnContainer');
+            btnContainer.style.display = 'none';
+
+            var modal = document.getElementById('myModal');
+            modal.style.display = 'flex';
+
+            initializePage();
+        }
+
+        // 사용자 정보 처리 함수
+        function processUserInfo() {
+            var ageInput = document.getElementById('age');
+            var residenceSelect = document.getElementById('residence');
+            var occupationSelect = document.getElementById('occupation');
+
+            if (!ageInput.checkValidity() || !residenceSelect.checkValidity() || !occupationSelect.checkValidity()) {
+                alert('질문에 대한 답을 모두 입력해주세요.');
+                return;
+            }
+
+            var age = parseInt(ageInput.value);
+            var residence = residenceSelect.value;
+            var occupation = occupationSelect.value;
+
+            // 추가적인 처리 로직
+            if (age >= 0 && age <= 100) {
+                if (age <= 19) {
+                    alert("청소년입니다.");
+                    ageresult = 1;
+                    readCSV('청소년/' + residence + '.csv', displayCSV);
+                } else if (age > 19 && age <= 39) {
+                    alert("청년입니다.");
+                    ageresult = 2;
+                    readCSV('청년/' + residence + '.csv', displayCSV);
+                } else {
+                    alert("노년입니다.");
+                    ageresult = 3;
+                    readCSV('노년/전체지역.csv', displayCSV);
+                }
+            } else {
+                alert("0~100세 사이의 나이를 입력해주세요.");
+            }
+
+            // 거주지 결과 설정
+            switch (residence) {
+                case 'a':
+                    residenceresult = '경기도';
+                    break;
+                case 'b':
+                    residenceresult = '강원도';
+                    break;
+                case 'c':
+                    residenceresult = '충청도';
+                    break;
+                case 'd':
+                    residenceresult = '경상도';
+                    break;
+                case 'e':
+                    residenceresult = '전라도';
+                    break;
+                case 'f':
+                    residenceresult = '제주도';
+                    break;
+                default:
+                    residenceresult = '알 수 없음';
+                    break;
+            }
+
+            var modal = document.getElementById('myModal');
+            modal.style.display = 'none';  // 모달을 닫는 부분 추가
+        }
+
+        // 모달 페이지 초기화
+        function initializePage() {
+            var questionSection = document.getElementById('question-section');
+            // 추가 초기화 로직 수행
+        }
+
+        // CSV 파일을 읽어와서 HTML 테이블에 표시
+        function readCSV(file, callback) {
+            var rawFile = new XMLHttpRequest();
+            rawFile.open("GET", file, true);
+            rawFile.onreadystatechange = function () {
+                if (rawFile.readyState === 4) {
+                    if (rawFile.status === 200 || rawFile.status == 0) {
+                        callback(rawFile.responseText);
+                    } else {
+                        console.error('Failed to load CSV file. Status:', rawFile.status);
+                    }
+                }
+            };
+            rawFile.send(null);
+        }
+
+        // CSV 파일을 HTML 테이블에 표시
+        function displayCSV(data) {
+            var tablesContainer = document.getElementById('tablesContainer');
+            tablesContainer.innerHTML = ''; // 이전에 생성된 테이블 초기화
+
+            var rows = data.split('\n');
+
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].split(',');
+
+                if (cells.length > 1) {
+                    var table = document.createElement('table');
+                    table.border = tb;
+
+                    var row = table.insertRow(-1);
+
+                    var cell = row.insertCell(-1);
+                    cell.innerHTML = cells[0]; // A열의 값
+
+                    tablesContainer.appendChild(table);
+                }
+            }
+        }
+
+        // CSV 파일 경로
+        // 초기에 CSV 파일을 읽어와서 HTML 테이블에 표시
+        // readCSV(csvFilePath, displayCSV);
+    </script>
+
+</body>
+
+</html>
