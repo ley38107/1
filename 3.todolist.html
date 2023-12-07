@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>달력</title>
+  <link rel="stylesheet" type="text/css" href="modal.css">
+  <style>
+    #categorySelect {
+        margin-bottom: 10px;
+    }
+
+    .category-color-input {
+        width: 20px;
+        height: 20px;
+        margin-right: 5px;
+        cursor: pointer;
+    }
+
+    .todo-mark {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-left: 5px;
+        vertical-align: middle;
+    }
+
+    .category-color {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+
+    .todo-category {
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        width: 14%;
+        position: relative;
+        cursor: pointer;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 60%; /* 수정: 모달 폭을 줄임 */
+        display: flex;
+        flex-direction: column; /* 수정: 내부 컨텐츠를 세로로 배치 */
+        align-items: flex-start; /* 수정: 왼쪽 정렬 */
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+    }
+
+    .selected {
+        background-color: #a9a9a9;
+    }
+
+    #todoList {
+        margin-top: 20px;
+    }
+
+    #todoList ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    #todoList li {
+        margin-bottom: 8px;
+    }
+
+    #todoList li button {
+        background-color: #ff6666;
+        color: #fff;
+        padding: 5px;
+        border: none;
+        cursor: pointer;
+    }
+
+    #todoList li button:hover {
+        background-color: #ff4d4d;
+    }
+
+    .todo-added::after {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-left: 5px;
+        vertical-align: middle;
+    }
+
+    .todo-category-color {
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+    #categorySelect,
+    #categoryColor,
+    #todoInput,
+    #todoList,
+    #todoList h3 {
+        margin-bottom: 10px; /* 수정: 각 요소들 간격 조정 */
+    }
+
+    #categorySelect,
+    #categoryColor,
+    #todoInput {
+        width: 30%; /* 수정: 폭 100%로 조정 */
+    }
+
+    #todoList {
+        width: 100%; /* 수정: 폭 100%로 조정 */
+    }
+
+    button {
+        align-self: flex-end; /* 수정: 버튼을 오른쪽으로 정렬 */
+    }
+
+</style>
+</head>
+
+<body>
+
+  <h2>월간 달력</h2>
+
+  <label for="monthSelect">월 선택:</label>
+  <select id="monthSelect" onchange="generateCalendar()">
+    <option value="0">1월</option>
+    <option value="1">2월</option>
+    <option value="2">3월</option>
+    <option value="3">4월</option>
+    <option value="4">5월</option>
+    <option value="5">6월</option>
+    <option value="6">7월</option>
+    <option value="7">8월</option>
+    <option value="8">9월</option>
+    <option value="9">10월</option>
+    <option value="10">11월</option>
+    <option value="11">12월</option>
+  </select>
+
+  <div id="calendarContainer"></div>
+
+  <!-- 할일 입력 모달 -->
+  <div id="todoModal" class="modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle">할일 입력</h2>
+
+        <textarea id="todoInput" rows="4" cols="50" placeholder="할일을 입력하세요..."></textarea>
+
+        <div>
+            <label for="categorySelect">카테고리 선택:</label>
+            <select id="categorySelect" onchange="changeCategoryColor()">
+                <option value="운동" data-color="#ff0000">운동</option>
+                <option value="공부" data-color="#00ff00">공부</option>
+                <option value="취미" data-color="#0000ff">취미</option>
+            </select>
+        </div>
+
+        <input type="color" id="categoryColor" class="category-color-input" value="#ff0000">
+
+        <div id="todoList">
+            <h3>할일 목록</h3>
+            <ul id="todoItems"></ul>
+        </div>
+
+        <button onclick="addTodo()">추가</button>
+        <button onclick="confirmSave()">저장</button>
+    </div>
+</div>
+
+
+  <script>
+    // 할 일 데이터를 저장하는 객체
+    var todoData = {};
+
+    // 달력을 생성하고 초기화하는 함수
+    function generateCalendar() {
+            // 선택된 월과 년도 가져오기
+            var selectedMonth = parseInt(document.getElementById("monthSelect").value);
+            var today = new Date();
+            var currentYear = today.getFullYear();
+
+            // 선택된 월의 첫째 날과 마지막 날 계산
+            var firstDay = new Date(currentYear, selectedMonth, 1);
+            var lastDay = new Date(currentYear, selectedMonth + 1, 0);
+
+            // 총 일수 계산
+            var totalDays;
+            if ([1, 3, 5, 7, 8, 10, 12].includes(selectedMonth)) {
+                totalDays = 31;
+            } else if ([4, 6, 9, 11].includes(selectedMonth)) {
+                totalDays = 30;
+            } else {  // 2월인 경우
+                // 윤년 여부 확인
+                var isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
+                totalDays = isLeapYear ? 29 : 28;
+            }
+
+            // 모든 날짜 요소에서 'todo-added' 클래스 제거
+            var allDays = document.querySelectorAll("td");
+            allDays.forEach(function (day) {
+                day.classList.remove("todo-added");
+            });
+
+            // 할 일이 있는 날짜에 'todo-added' 클래스 추가
+            markDateWithTodoAdded();
+
+            // 달력을 표시할 테이블 생성
+            var table = "<table>";
+            table += "<tr><th colspan='7'>" + currentYear + "년 " + (selectedMonth + 1) + "월</th></tr>";
+            table += "<tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr>";
+
+            // ** 수정된 부분 시작 **
+            // 날짜 셀을 생성하고 각 날짜에 대해 이벤트 핸들러를 추가
+            var firstDayOfWeek = firstDay.getDay(); // 현재 월의 첫 날이 무슨 요일인지 가져옴
+
+            // 첫 주의 빈 셀 추가
+            table += "<tr>";
+            for (var k = 0; k < firstDayOfWeek; k++) {
+                table += "<td></td>";
+            }
+
+            for (var i = 1; i <= lastDay.getDate(); i++) {
+                var currentDay = new Date(currentYear, selectedMonth, i);
+
+                // 현재 월의 날짜인 경우
+                table += "<td onclick='openModal(" + i + ")' id='day-" + i + "'>" + i + "</td>";
+
+                // 현재 주의 끝인 경우 빈 셀을 채우지 않음
+                if (currentDay.getDay() === 6) {
+                    // 주의 끝이면 행을 마무리
+                    if (i !== lastDay.getDate()) {
+                        table += "</tr>";
+                    }
+                }
+            }
+
+            table += "</table>";
+
+            // 달력을 표시할 컨테이너에 HTML 추가
+            document.getElementById("calendarContainer").innerHTML = table;
+
+            // 할 일이 있는 날짜에 'todo-added' 클래스 추가
+            markDateWithTodoAdded();
+        }
+
+
+    // 카테고리 선택 시 호출되는 함수
+    function changeCategoryColor() {
+        var categorySelect = document.getElementById("categorySelect");
+        var selectedColor = categorySelect.options[categorySelect.selectedIndex].dataset.color;
+        document.getElementById("categoryColor").value = selectedColor;
+    }
+
+    // 할 일 입력 모달을 열 때 호출되는 함수
+    function openModal(day) {
+        // 모달이 열리기 전에 현재 열려 있는 모달 닫기
+        closeModal();
+
+        // 선택된 날짜 정보 가져오기
+        var date = getDateFromModalTitle(day);
+
+        // 선택된 날짜에 저장된 할 일 목록 가져오기
+        var dayTodos = todoData[date];
+
+        // 할 일 입력창 초기화
+        var todoInput = document.getElementById("todoInput");
+        todoInput.value = "";
+
+        // 모달 제목 설정
+        document.getElementById("modalTitle").innerText = "할일 입력 - " + date;
+
+        // 모달 열기
+        document.getElementById("todoModal").style.display = "block";
+
+        // 선택된 날짜에 'selected' 클래스 추가
+        document.getElementById("day-" + day).classList.add("selected");
+
+        // 이전에 입력된 할 일 목록 불러오기
+        var todoList = document.getElementById("todoItems");
+        todoList.innerHTML = "";
+        if (dayTodos && dayTodos.length > 0) {
+            for (var i = 0; i < dayTodos.length; i++) {
+                appendTodoItem(dayTodos[i].todoItem, dayTodos[i].category, dayTodos[i].categoryColor);
+            }
+        }
+    }
+
+    // 할 일 입력 모달을 닫을 때 호출되는 함수
+    function closeModal() {
+        // 선택된 날짜에서 'selected' 클래스 제거
+        var selected = document.querySelector(".selected");
+        if (selected) {
+            selected.classList.remove("selected");
+        }
+
+        // 모달 닫기
+        document.getElementById("todoModal").style.display = "none";
+    }
+
+    // 할 일을 추가할 때 호출되는 함수
+    function addTodo() {
+        // 할 일 입력창과 카테고리 선택창에서 값을 가져오기
+        var todoInput = document.getElementById("todoInput");
+        var todoItem = todoInput.value.trim();
+        var category = document.getElementById("categorySelect").value;
+        var categoryColor = document.getElementById("categoryColor").value;
+
+        // 입력된 할 일이 비어있지 않으면 목록에 추가
+        if (todoItem !== "") {
+            appendTodoItem(todoItem, category, categoryColor);
+            todoInput.value = "";
+        }
+    }
+
+    // 할 일 목록에 항목을 추가할 때 호출되는 함수
+    function appendTodoItem(todoItem, category, categoryColor) {
+        var todoList = document.getElementById("todoItems");
+        var listItem = document.createElement("li");
+
+        // 카테고리 색상 표시를 위한 div 요소 생성
+        var categoryColorDiv = document.createElement("div");
+        categoryColorDiv.classList.add("category-color");
+        categoryColorDiv.style.backgroundColor = categoryColor;
+
+        // 카테고리 색상 표시를 위한 span 요소 생성
+        var categoryColorDisplay = document.createElement("span");
+        categoryColorDisplay.classList.add("todo-category-color");
+        categoryColorDisplay.appendChild(categoryColorDiv);
+
+        // 카테고리 색상 표시를 목록 아이템에 추가
+        listItem.appendChild(categoryColorDisplay);
+
+        // 카테고리가 있는 경우 텍스트에 추가
+        if (category) {
+            var todoText = document.createElement("span");
+            todoText.textContent = todoItem;
+            todoText.style.color = categoryColor;
+            listItem.appendChild(todoText);
+
+            // 목록 아이템에 카테고리 및 색상 정보 저장
+            listItem.dataset.category = category;
+            listItem.dataset.categoryColor = categoryColor;
+        } else {
+            // 카테고리가 없는 경우 텍스트만 추가
+            listItem.textContent = todoItem;
+        }
+
+        // 삭제 버튼 생성 및 이벤트 핸들러 추가
+        var deleteButton = document.createElement("button");
+            deleteButton.textContent = "삭제";
+            deleteButton.onclick = function () {
+                confirmDelete(listItem); // 삭제 전 확인 메시지 표시
+            };
+
+        // 삭제 버튼을 목록 아이템에 추가
+        listItem.appendChild(deleteButton);
+
+        // 목록 아이템을 할 일 목록에 추가
+        todoList.appendChild(listItem);
+    }
+
+    // 할 일이 있는 날짜에 'todo-added' 클래스 추가하는 함수
+    function markDateWithTodoAdded() {
+        // 모든 'td' 요소 가져오기
+        var allDays = document.querySelectorAll("td");
+
+        // 각 날짜별로 할 일 표시 확인
+        allDays.forEach(function (day) {
+            var dayNumber = parseInt(day.textContent);
+            var date = getDateFromModalTitle(dayNumber);
+
+            // 해당 날짜에 할 일이 있는지 확인
+            if (todoData[date] && todoData[date].length > 0) {
+                if (day.querySelector('.todo-mark')) {
+                    return;
+                }
+                // 해당 날짜에 할 일이 있으면 'todo-added' 클래스 추가
+                day.classList.add("todo-added");
+                
+                // 해당 날짜의 할 일 목록을 가져옴
+                var dayTodos = todoData[date];
+
+                // 각 할 일에 대해 점으로 표시
+                dayTodos.forEach(function(todo) {
+                    var categoryColor = todo.categoryColor;
+
+                    // 할 일을 나타내는 점 요소 생성 및 스타일 적용
+                    var dot = document.createElement("div");
+                    dot.classList.add("todo-mark");
+                    dot.style.backgroundColor = categoryColor;
+
+                    //해당 날짜 셀에 점 추가
+                    day.appendChild(dot);
+                });
+            }
+        });
+    }
+
+    // 할 일 목록을 저장하는 함수
+    function saveTodo() {
+        // 선택된 날짜 가져오기
+        var day = getSelectedDay();
+        var date = getDateFromModalTitle(day);
+
+        // 할 일 목록 요소 가져오기
+        var todoList = document.getElementById("todoItems");
+
+        // 각 할 일 목록 요소에서 텍스트, 카테고리, 카테고리 색상 정보 추출
+        var todoItems = Array.from(todoList.children).map(function (item) {
+            return {
+                todoItem: item.textContent.replace("삭제", "").trim(),
+                category: item.dataset.category,
+                categoryColor: item.dataset.categoryColor
+            };
+        });
+
+        // 할 일 목록을 날짜에 맞게 저장
+        todoData[date] = todoItems;
+
+        // 모달 닫기
+        closeModal();
+
+        // 달력 갱신
+        generateCalendar();
+
+        // 할 일이 있는 날짜에 'todo-added' 클래스 추가
+        markDateWithTodoAdded(day);
+    }
+
+    // 모달 제목에서 날짜 정보를 가져오는 함수
+    function getDateFromModalTitle(day) {
+        var selectedMonth = document.getElementById("monthSelect").value;
+        var today = new Date();
+        var currentYear = today.getFullYear();
+        return currentYear + '-' + (parseInt(selectedMonth) + 1) + '-' + day;
+    }
+
+    // 선택된 날짜를 가져오는 함수
+    function getSelectedDay() {
+        var selected = document.querySelector(".selected");
+        if (selected) {
+            return selected.textContent.trim();
+        }
+        return null;
+    }
+
+    function confirmSave() {
+            var confirmSave = confirm("저장하시겠습니까?");
+            if (confirmSave) {
+                saveTodo();
+            }
+        }
+        function confirmDelete(item) {
+            var confirmDelete = confirm("정말로 삭제하시겠습니까?");
+            if (confirmDelete) {
+                item.remove();
+            }
+        }
+    // 초기에 달력 생성
+    generateCalendar();
+</script>
+
+
+</body>
+
+</html>

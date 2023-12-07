@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>달력</title>
+  <link rel="stylesheet" type="text/css" href="modal.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+      width: 14%;
+      position: relative;
+      cursor: pointer;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+    }
+
+    .selected {
+      background-color: #a9a9a9;
+    }
+
+    #todoList {
+      margin-top: 20px;
+    }
+
+    #todoList ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #todoList li {
+      margin-bottom: 8px;
+    }
+
+    #todoList li button {
+      background-color: #ff6666;
+      color: #fff;
+      padding: 5px;
+      border: none;
+      cursor: pointer;
+    }
+
+    #todoList li button:hover {
+      background-color: #ff4d4d;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>월간 달력</h2>
+
+  <label for="monthSelect">월 선택:</label>
+  <select id="monthSelect" onchange="generateCalendar()">
+    <option value="0">1월</option>
+    <option value="1">2월</option>
+    <option value="2">3월</option>
+    <option value="3">4월</option>
+    <option value="4">5월</option>
+    <option value="5">6월</option>
+    <option value="6">7월</option>
+    <option value="7">8월</option>
+    <option value="8">9월</option>
+    <option value="9">10월</option>
+    <option value="10">11월</option>
+    <option value="11">12월</option>
+  </select>
+
+  <div id="calendarContainer"></div>
+
+  <!-- 할일 입력 모달 -->
+  <div id="todoModal" class="modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modalTitle">할일 입력</h2>
+      <textarea id="todoInput" rows="4" cols="50" placeholder="할일을 입력하세요..."></textarea>
+      <button onclick="addTodo()">추가</button>
+      <div id="todoList">
+        <h3>할일 목록</h3>
+        <ul id="todoItems"></ul>
+      </div>
+      <button onclick="saveTodo()">저장</button>
+    </div>
+  </div>
+
+  <script>
+    var todoData = {};
+
+    function generateCalendar() {
+      var selectedMonth = document.getElementById("monthSelect").value;
+      var today = new Date();
+      var currentYear = today.getFullYear();
+      var firstDay = new Date(currentYear, selectedMonth, 1);
+      var lastDay = new Date(currentYear, selectedMonth + 1, 0);
+
+      var table = "<table>";
+      table += "<tr><th colspan='7'>" + currentYear + "년 " + (parseInt(selectedMonth) + 1) + "월</th></tr>";
+      table += "<tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr>";
+
+      for (var i = 1; i <= lastDay.getDate(); i++) {
+        table += "<td onclick='openModal(" + i + ")' id='day-" + i + "'>" + i + "</td>";
+
+        if ((firstDay.getDay() + i) % 7 === 0) {
+          table += "</tr><tr>";
+        }
+      }
+
+      table += "</tr>";
+      table += "</table>";
+
+      document.getElementById("calendarContainer").innerHTML = table;
+    }
+
+    function openModal(day) {
+      closeModal(); // 모달 열기 전에 현재 열려있는 모달 닫기
+      var date = getDateFromModalTitle(day);
+      var dayTodos = todoData[date];
+      var todoInput = document.getElementById("todoInput");
+      todoInput.value = "";
+      document.getElementById("modalTitle").innerText = "할일 입력 - " + date;
+      document.getElementById("todoModal").style.display = "block";
+      document.getElementById("day-" + day).classList.add("selected");
+
+      // 이전에 입력된 할일 목록 불러오기
+      var todoList = document.getElementById("todoItems");
+      todoList.innerHTML = "";
+      if (dayTodos && dayTodos.length > 0) {
+        for (var i = 0; i < dayTodos.length; i++) {
+          appendTodoItem(dayTodos[i]);
+        }
+      }
+    }
+
+    function closeModal() {
+      var selected = document.querySelector(".selected");
+      if (selected) {
+        selected.classList.remove("selected");
+      }
+      document.getElementById("todoModal").style.display = "none";
+    }
+
+    function addTodo() {
+      var todoInput = document.getElementById("todoInput");
+      var todoItem = todoInput.value.trim();
+      if (todoItem !== "") {
+        appendTodoItem(todoItem);
+        todoInput.value = "";
+      }
+    }
+
+    function appendTodoItem(todoItem) {
+      var todoList = document.getElementById("todoItems");
+      var listItem = document.createElement("li");
+      listItem.textContent = todoItem;
+      var deleteButton = document.createElement("button");
+      deleteButton.textContent = "삭제";
+      deleteButton.onclick = function () {
+        listItem.remove();
+      };
+      listItem.appendChild(deleteButton);
+      todoList.appendChild(listItem);
+    }
+
+    function saveTodo() {
+      var day = getSelectedDay();
+      var date = getDateFromModalTitle(day);
+
+      var todoList = document.getElementById("todoItems");
+      var todoItems = Array.from(todoList.children).map(function (item) {
+        return item.textContent.replace("삭제", "").trim();
+      });
+
+      todoData[date] = todoItems;
+      closeModal();
+      generateCalendar();
+    }
+
+    function getDateFromModalTitle(day) {
+      var selectedMonth = document.getElementById("monthSelect").value;
+      var today = new Date();
+      var currentYear = today.getFullYear();
+      return currentYear + '-' + (parseInt(selectedMonth) + 1) + '-' + day;
+    }
+
+    function getSelectedDay() {
+      var selected = document.querySelector(".selected");
+      if (selected) {
+        return selected.textContent.trim();
+      }
+      return null;
+    }
+
+    generateCalendar();
+  </script>
+
+</body>
+
+</html>
