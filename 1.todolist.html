@@ -114,7 +114,6 @@
 
   <div id="calendarContainer"></div>
 
-  <!-- 할일 입력 모달 -->
   <div id="todoModal" class="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
       <span class="close" onclick="closeModal()">&times;</span>
@@ -158,7 +157,7 @@
     }
 
     function openModal(day) {
-      closeModal(); // 모달 열기 전에 현재 열려있는 모달 닫기
+      closeModal(); 
       var date = getDateFromModalTitle(day);
       var dayTodos = todoData[date];
       var todoInput = document.getElementById("todoInput");
@@ -167,7 +166,6 @@
       document.getElementById("todoModal").style.display = "block";
       document.getElementById("day-" + day).classList.add("selected");
 
-      // 이전에 입력된 할일 목록 불러오기
       var todoList = document.getElementById("todoItems");
       todoList.innerHTML = "";
       if (dayTodos && dayTodos.length > 0) {
