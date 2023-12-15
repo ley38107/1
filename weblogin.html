@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문화정책 소개 앱</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .kakao-login-btn {
+            display: inline-block;
+            background-color: #f7e600;
+            color: #3c1e1e;
+            padding: 10px 20px;
+            font-size: 18px;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .kakao-login-btn:hover {
+            background-color: #ffcf00;
+        }
+
+
+        main {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* 화면 가로, 세로 중앙 정렬 */
+            flex-direction: column;
+        }
+
+
+
+    </style>
+</head>
+
+<body>
+    <main id="mainContent">
+        
+        <a href="javascript:kakaoLogin();" class="kakao-login-btn">카카오톡 로그인</a>
+        <!-- Include Kakao SDK script -->
+
+    </main>
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <script>
+        // Kakao SDK initialization
+        window.Kakao.init("2b9ef952a6268f3aa887a8d7ce0db1bd");
+        function kakaoLogin() {
+            window.Kakao.Auth.login({
+                scope: 'profile_nickname',
+                success: function (authObj) {
+                    console.log(authObj);
+                    window.Kakao.API.request({
+                        url: '/v2/user/me',
+                        success: function (res) {
+                            const kakao_account = res.kakao_account;
+                            console.log(kakao_account);
+
+                            const nickname = kakao_account.profile.nickname;
+                            window.location.href = 'todolist.html?nickname=' + encodeURIComponent(nickname);
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>
