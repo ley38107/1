@@ -39,7 +39,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* 화면 가로, 세로 중앙 정렬 */
             flex-direction: column;
         }
 
@@ -52,12 +51,10 @@
     <main id="mainContent">
         
         <a href="javascript:kakaoLogin();" class="kakao-login-btn">카카오톡 로그인</a>
-        <!-- Include Kakao SDK script -->
-
     </main>
     <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
     <script>
-        // Kakao SDK initialization
+
         window.Kakao.init("2b9ef952a6268f3aa887a8d7ce0db1bd");
         function kakaoLogin() {
             window.Kakao.Auth.login({
